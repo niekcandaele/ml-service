@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Run Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run free tests
+        run: uv run pytest -m "not paid" -v || test $? -eq 5
+
+      - name: Build Docker image
+        run: docker build -t ml-service:${{ github.sha }} .
+        timeout-minutes: 15
+
+  # Note: GCR push is commented out for now (requires GCP credentials setup)
+  # Uncomment when hackathon GCP project is configured
+  #
+  # push-to-gcr:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Authenticate to Google Cloud
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
+  #
+  #     - name: Set up Cloud SDK
+  #       uses: google-github-actions/setup-gcloud@v2
+  #
+  #     - name: Configure Docker for GCR
+  #       run: gcloud auth configure-docker gcr.io
+  #
+  #     - name: Build and push to GCR
+  #       run: |
+  #         docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ml-service:${{ github.sha }} .
+  #         docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ml-service:${{ github.sha }}
+  #         docker tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/ml-service:${{ github.sha }} gcr.io/${{ secrets.GCP_PROJECT_ID }}/ml-service:latest
+  #         docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ml-service:latest
