@@ -59,9 +59,6 @@ dmypy.json
 *.log
 logs/
 
-# Docker
-.dockerignore
-
 # MacOS
 .DS_Store
 .AppleDouble

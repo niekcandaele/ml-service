@@ -102,7 +102,8 @@ class TestOCRRequest:
 
     def test_valid_base64(self):
         """Test that base64 image data is accepted."""
-        base64_data = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA..."
+        # Valid base64 data URI (simple test data)
+        base64_data = "data:image/jpeg;base64,SGVsbG9Xb3JsZA=="
         request = OCRRequest(image=base64_data)
         assert request.image.startswith("data:image/jpeg;base64,")
 

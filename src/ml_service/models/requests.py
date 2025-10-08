@@ -4,19 +4,25 @@ Pydantic models for validating incoming API requests with OpenAPI examples.
 All models include validation rules and rich documentation.
 """
 
-from pydantic import BaseModel, Field
+import base64
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, field_validator
 
 
-class EmbeddingRequest(BaseModel):
-    """Request model for generating text embeddings."""
+class TextInputRequest(BaseModel):
+    """Base request model for text input endpoints."""
 
     text: str = Field(
         ...,
         min_length=1,
         max_length=10000,
-        description="Text to generate embedding for",
-        examples=["What is machine learning?"],
+        description="Input text for processing",
     )
+
+
+class EmbeddingRequest(TextInputRequest):
+    """Request model for generating text embeddings."""
 
     model_config = {
         "json_schema_extra": {
@@ -31,16 +37,8 @@ class EmbeddingRequest(BaseModel):
     }
 
 
-class ClassificationRequest(BaseModel):
+class ClassificationRequest(TextInputRequest):
     """Request model for classifying text as question or statement."""
-
-    text: str = Field(
-        ...,
-        min_length=1,
-        max_length=10000,
-        description="Text to classify as question or statement",
-        examples=["Is this a question?"],
-    )
 
     model_config = {
         "json_schema_extra": {
@@ -57,9 +55,33 @@ class OCRRequest(BaseModel):
 
     image: str = Field(
         ...,
+        max_length=10_485_760,  # 10MB limit (base64 encoded)
         description="Image URL or base64-encoded image data",
         examples=["https://example.com/invoice.jpg"],
     )
+
+    @field_validator("image")
+    @classmethod
+    def validate_image_format(cls, v: str) -> str:
+        """Validate that image is either a valid URL or base64 data."""
+        # Check if it's a URL
+        if v.startswith(("http://", "https://")):
+            parsed = urlparse(v)
+            if not all([parsed.scheme, parsed.netloc]):
+                raise ValueError("Invalid URL format")
+            return v
+
+        # Check if it's base64 data URI
+        if v.startswith("data:image/"):
+            try:
+                # Extract and validate base64 data
+                base64_data = v.split(",", 1)[1] if "," in v else v
+                base64.b64decode(base64_data, validate=True)
+                return v
+            except Exception as e:
+                raise ValueError(f"Invalid base64 image data: {e}")
+
+        raise ValueError("Image must be a valid URL or base64-encoded data URI")
 
     model_config = {
         "json_schema_extra": {

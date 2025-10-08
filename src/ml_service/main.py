@@ -83,8 +83,8 @@ app = FastAPI(
     """,
     version="0.1.0",
     contact={
-        "name": "RightCrowd Platform Team",
-        "url": "https://github.com/rightcrowd/ml-service",
+        "name": "ML service dev team",
+        "url": "https://github.com/niekcandaele/ml-service",
     },
     license_info={"name": "Proprietary"},
 )

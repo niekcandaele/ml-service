@@ -4,6 +4,7 @@ Environment variables are loaded from .env file or system environment.
 All settings can be overridden via environment variables with UPPERCASE names.
 """
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     ocr_model: str = "gemini-2.0-flash-001"
     classification_model: str = "gemini-2.0-flash-001"
 
-    model_config = {"env_file": ".env"}
+    model_config = ConfigDict(env_file=".env")
 
 
 # Global settings instance

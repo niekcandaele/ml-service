@@ -61,10 +61,7 @@ class EmbeddingGemmaClient:
             Exception: Original torch/HuggingFace exceptions bubble naturally for debugging
         """
         # Run synchronous encode in thread pool to avoid blocking event loop
-        loop = asyncio.get_event_loop()
-        embedding = await loop.run_in_executor(
-            None, lambda: self.model.encode(text, convert_to_numpy=False)
-        )
+        embedding = await asyncio.to_thread(self.model.encode, text, convert_to_numpy=False)
 
         # Convert tensor to list of floats
         # sentence-transformers with convert_to_numpy=False returns torch.Tensor
