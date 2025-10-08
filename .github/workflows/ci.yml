@@ -14,8 +14,8 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          # Reserve 8GB for Docker builds (stores images in /var/lib/docker)
-          root-reserve-mb: 8192
+          # Reserve 20GB for Docker builds (stores images + build cache in /var/lib/docker)
+          root-reserve-mb: 20480
           # Create 1GB swap
           swap-size-mb: 1024
           # Remove unnecessary software to maximize space
