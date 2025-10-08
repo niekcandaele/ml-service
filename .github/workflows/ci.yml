@@ -38,6 +38,8 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Run free tests
+        env:
+          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
         run: uv run pytest -m "not paid" -v || test $? -eq 5
 
 # Note: Docker build moved to Google Cloud Build for deployment
