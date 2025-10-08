@@ -10,7 +10,8 @@ from ml_service.main import app
 @pytest.fixture
 def test_client():
     """Synchronous test client for FastAPI app."""
-    return TestClient(app)
+    with TestClient(app) as client:
+        yield client
 
 
 @pytest.fixture

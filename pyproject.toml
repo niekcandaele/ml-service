@@ -12,11 +12,12 @@ keywords = ["ml", "fastapi", "gemini", "cloud-run", "gpu", "embeddings"]
 dependencies = [
     "fastapi>=0.118.0",
     "uvicorn[standard]>=0.37.0",
-    "google-genai>=1.41.0",  # Note: google-generativeai is deprecated, using google-genai
+    "google-genai>=1.41.0", # Note: google-generativeai is deprecated, using google-genai
     "transformers>=4.56.1",
     "torch>=2.6.0",
     "pydantic>=2.11.10",
     "pydantic-settings>=2.11.0",
+    "sentence-transformers>=3.4.0",
 ]
 
 [project.optional-dependencies]
