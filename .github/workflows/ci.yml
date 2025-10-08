@@ -40,6 +40,18 @@ jobs:
       - name: Run free tests
         run: uv run pytest -m "not paid" -v || test $? -eq 5
 
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # Keep Docker since we need it for building
+          docker-images: false
+          # Remove these large unnecessary tools
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
