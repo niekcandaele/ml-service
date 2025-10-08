@@ -48,8 +48,9 @@ dmypy.json
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Model files (large binaries)
-models/
+# Model weight files (large binaries) - but not source code!
+# Only ignore models/ at root level, not src/ml_service/models/
+/models/
 *.pth
 *.onnx
 *.safetensors
