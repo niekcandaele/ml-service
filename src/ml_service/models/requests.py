@@ -65,9 +65,7 @@ class OCRRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {"image": "https://example.com/receipt.jpg"},
-                {
-                    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYF..."
-                },
+                {"image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYF..."},
             ]
         }
     }
@@ -96,9 +94,7 @@ class CompletionRequest(BaseModel):
                     "prompt": "Write a haiku about machine learning",
                     "model": "gemini-2.0-flash-001",
                 },
-                {
-                    "prompt": "Summarize the key benefits of cloud computing in 3 bullet points"
-                },
+                {"prompt": "Summarize the key benefits of cloud computing in 3 bullet points"},
             ]
         }
     }

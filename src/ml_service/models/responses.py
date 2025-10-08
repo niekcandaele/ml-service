@@ -34,9 +34,7 @@ class EmbeddingResponse(BaseModel):
 class ClassificationResponse(BaseModel):
     """Response model for question classification."""
 
-    is_question: bool = Field(
-        ..., description="Whether the text is a question", examples=[True]
-    )
+    is_question: bool = Field(..., description="Whether the text is a question", examples=[True])
     confidence: float = Field(
         ...,
         description="Confidence score of the classification (0.0 to 1.0)",
@@ -88,8 +86,10 @@ class CompletionResponse(BaseModel):
     response: str = Field(
         ...,
         description="Generated text completion from the model",
-        examples=["Quantum computing uses quantum bits (qubits) that can exist in multiple "
-                  "states simultaneously, enabling parallel processing of information."],
+        examples=[
+            "Quantum computing uses quantum bits (qubits) that can exist in multiple "
+            "states simultaneously, enabling parallel processing of information."
+        ],
     )
 
     model_config = {
