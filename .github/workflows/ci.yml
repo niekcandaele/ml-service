@@ -16,6 +16,8 @@ jobs:
 
       - name: Install UV
         uses: astral-sh/setup-uv@v5
+        with:
+          prune-cache: false
 
       - name: Set up Python
         run: uv python install 3.12
