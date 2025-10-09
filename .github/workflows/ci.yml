@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Run Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run free tests
+        env:
+          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+        run: uv run pytest -m "not paid" -v || test $? -eq 5
+
+# Note: Docker build moved to Google Cloud Build for deployment
+# Cloud Build provides 100GB+ disk space (vs GitHub Actions 14GB limit)
+# Set up Cloud Build trigger on merge to main for automatic deployment
+#
+# To deploy:
+# 1. Set up Cloud Build trigger connected to this repo
+# 2. Configure trigger to run on push to main branch
+# 3. Cloud Build will use cloudbuild.yaml to build and deploy
