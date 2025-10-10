@@ -64,6 +64,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize Gemini client for paid endpoints (classification, OCR, completion)
     logger.info("Initializing Gemini API client...")
+    gemini_client: GeminiClient | None = None
     try:
         gemini_client = GeminiClient()
         app.state.classification_service = ClassificationService(gemini_client)
@@ -85,7 +86,7 @@ async def lifespan(app: FastAPI):
     logger.info("ML Service shutting down")
 
     # Cleanup Gemini client HTTP connections
-    if hasattr(app.state, "classification_service") and app.state.classification_service:
+    if gemini_client is not None:
         try:
             await gemini_client.close()
             logger.info("Gemini client closed")
