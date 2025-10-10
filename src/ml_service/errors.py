@@ -109,7 +109,7 @@ def validation_error(detail: str, instance: str | None = None) -> APIError:
         ProblemDetail(
             type=ERROR_TYPE_VALIDATION,
             title="Validation Error",
-            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=detail,
             instance=instance,
         )

@@ -13,12 +13,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from ml_service.api.routes.classification import router as classification_router
+from ml_service.api.routes.completion import router as completion_router
 from ml_service.api.routes.embedding import router as embedding_router
 from ml_service.api.routes.health import router as health_router
+from ml_service.api.routes.ocr import router as ocr_router
 from ml_service.clients.embeddinggemma import EmbeddingGemmaClient
+from ml_service.clients.gemini import GeminiClient
 from ml_service.config import settings
 from ml_service.errors import ERROR_TYPE_INTERNAL, APIError, ProblemDetail, api_error_handler
+from ml_service.services.classification import ClassificationService
+from ml_service.services.completion import CompletionService
 from ml_service.services.embedding import EmbeddingService
+from ml_service.services.ocr import OCRService
 
 # Configure logging
 logging.basicConfig(
@@ -55,10 +62,35 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to load EmbeddingGemma model: {e}", exc_info=True)
         raise  # Fail startup if model can't load
 
+    # Initialize Gemini client for paid endpoints (classification, OCR, completion)
+    logger.info("Initializing Gemini API client...")
+    try:
+        gemini_client = GeminiClient()
+        app.state.classification_service = ClassificationService(gemini_client)
+        app.state.ocr_service = OCRService(gemini_client)
+        app.state.completion_service = CompletionService(gemini_client)
+        logger.info("Gemini API client initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Gemini client: {e}", exc_info=True)
+        # Log warning but don't fail startup - allow EmbeddingGemma to work
+        # Gemini endpoints will fail at request time with clear error
+        logger.warning("Gemini endpoints will be unavailable - missing GOOGLE_API_KEY?")
+        app.state.classification_service = None
+        app.state.ocr_service = None
+        app.state.completion_service = None
+
     yield
 
     # Shutdown
     logger.info("ML Service shutting down")
+
+    # Cleanup Gemini client HTTP connections
+    if hasattr(app.state, "classification_service") and app.state.classification_service:
+        try:
+            await gemini_client.close()
+            logger.info("Gemini client closed")
+        except Exception as e:
+            logger.error(f"Error closing Gemini client: {e}")
 
 
 # Create FastAPI app with rich OpenAPI metadata
@@ -122,5 +154,8 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # Register routers
-app.include_router(embedding_router)
 app.include_router(health_router)
+app.include_router(embedding_router)
+app.include_router(classification_router)
+app.include_router(ocr_router)
+app.include_router(completion_router)

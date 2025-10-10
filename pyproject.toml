@@ -4,10 +4,21 @@ version = "0.1.0"
 description = "FastAPI-based ML inference service for Cloud Run GPU with EmbeddingGemma and Gemini"
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
 authors = [
     { name = "RightCrowd Platform Team" }
 ]
-keywords = ["ml", "fastapi", "gemini", "cloud-run", "gpu", "embeddings"]
+keywords = ["ml", "fastapi", "gemini", "cloud-run", "gpu", "embeddings", "ocr", "classification", "completion"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 
 dependencies = [
     "fastapi>=0.118.0",
