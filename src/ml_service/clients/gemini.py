@@ -5,8 +5,11 @@ using Google's Gemini models.
 """
 
 import asyncio
+import ipaddress
 import json
 import logging
+import socket
+from urllib.parse import urlparse
 
 import httpx
 from google import genai
@@ -230,6 +233,36 @@ JSON response:"""
         """
         # Check if it's a URL
         if image.startswith(("http://", "https://")):
+            # Validate URL to prevent SSRF attacks
+            parsed = urlparse(image)
+            host = parsed.hostname
+            if not host:
+                raise ValueError("Invalid image URL: missing hostname")
+
+            # Resolve hostname to IP addresses
+            try:
+                infos = socket.getaddrinfo(host, None)
+            except socket.gaierror:
+                raise ValueError("Invalid image URL: cannot resolve host")
+
+            # Check each resolved IP address
+            for _, _, _, _, sockaddr in infos:
+                ip_str = sockaddr[0]
+                ip = ipaddress.ip_address(ip_str)
+
+                # Block disallowed IP ranges (SSRF protection)
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_link_local
+                    or ip.is_reserved
+                    or ip.is_multicast
+                ):
+                    raise ValueError(
+                        f"Image URL resolves to a disallowed address: {ip_str}. "
+                        "Cannot access private, loopback, link-local, reserved, or multicast IPs."
+                    )
+
             # Download image from URL
             logger.debug(f"Downloading image from URL: {image[:100]}...")
             response = await self.http_client.get(image)
