@@ -256,7 +256,7 @@ This service is designed for Google Cloud Run with GPU support.
 │               ML Service (FastAPI)                       │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │         API Routes (FastAPI Routers)             │  │
-│  │  /embedding, /classify-question, /ocr, /complete │  │
+│  │  /embedding, /classify-question, /ocr, /completion │  │
 │  │  /healthz, /readyz                               │  │
 │  └────────┬─────────────────────────────────────────┘  │
 │           │                                              │
