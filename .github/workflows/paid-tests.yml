@@ -1,0 +1,41 @@
+name: Paid Tests (Manual)
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  paid-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run paid tests
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+        run: uv run pytest -m paid -v
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "::notice::Paid tests completed. Check logs above for results."
+          echo "::notice::These tests consume Gemini API quota - run before releases only."
