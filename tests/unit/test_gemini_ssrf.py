@@ -3,15 +3,31 @@
 import socket
 from unittest.mock import AsyncMock, Mock, patch
 
+import httpx
 import pytest
 
 from ml_service.clients.gemini import GeminiClient
 
 
+@pytest.fixture
+def mock_gemini_client():
+    """Create GeminiClient with mocked initialization (no API key required).
+
+    This fixture bypasses API key validation while keeping the actual
+    SSRF protection logic intact for testing.
+    """
+    with patch.object(GeminiClient, "__init__", lambda self: None):
+        client = GeminiClient()
+        # Manually set required attributes that __init__ would set
+        client.http_client = httpx.AsyncClient(timeout=30.0)
+        client.client = Mock()  # Mock the GenAI client
+        return client
+
+
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_localhost():
+async def test_prepare_image_part_blocks_localhost(mock_gemini_client):
     """Should block localhost/127.0.0.1 to prevent SSRF."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     # Mock DNS resolution to return localhost
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
@@ -24,9 +40,9 @@ async def test_prepare_image_part_blocks_localhost():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_private_ip_192():
+async def test_prepare_image_part_blocks_private_ip_192(mock_gemini_client):
     """Should block private IP range 192.168.x.x."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -38,9 +54,9 @@ async def test_prepare_image_part_blocks_private_ip_192():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_private_ip_10():
+async def test_prepare_image_part_blocks_private_ip_10(mock_gemini_client):
     """Should block private IP range 10.x.x.x."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -52,9 +68,9 @@ async def test_prepare_image_part_blocks_private_ip_10():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_private_ip_172():
+async def test_prepare_image_part_blocks_private_ip_172(mock_gemini_client):
     """Should block private IP range 172.16-31.x.x."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -66,9 +82,9 @@ async def test_prepare_image_part_blocks_private_ip_172():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_link_local():
+async def test_prepare_image_part_blocks_link_local(mock_gemini_client):
     """Should block link-local addresses (169.254.x.x)."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -80,9 +96,9 @@ async def test_prepare_image_part_blocks_link_local():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_multicast():
+async def test_prepare_image_part_blocks_multicast(mock_gemini_client):
     """Should block multicast addresses (224.0.0.0/4)."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -94,9 +110,9 @@ async def test_prepare_image_part_blocks_multicast():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_blocks_reserved():
+async def test_prepare_image_part_blocks_reserved(mock_gemini_client):
     """Should block reserved IP addresses (240.0.0.0/4)."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -108,18 +124,18 @@ async def test_prepare_image_part_blocks_reserved():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_invalid_hostname():
+async def test_prepare_image_part_invalid_hostname(mock_gemini_client):
     """Should reject URLs with missing or invalid hostnames."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with pytest.raises(ValueError, match="missing hostname"):
         await client._prepare_image_part("https:///image.jpg")
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_dns_resolution_failure():
+async def test_prepare_image_part_dns_resolution_failure(mock_gemini_client):
     """Should handle DNS resolution failures gracefully."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.side_effect = socket.gaierror("Name resolution failed")
@@ -129,9 +145,9 @@ async def test_prepare_image_part_dns_resolution_failure():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_allows_public_ip():
+async def test_prepare_image_part_allows_public_ip(mock_gemini_client):
     """Should allow valid public IP addresses."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     # Mock DNS resolution to return a public IP (8.8.8.8 - Google DNS)
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
@@ -152,9 +168,9 @@ async def test_prepare_image_part_allows_public_ip():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_handles_ipv6_loopback():
+async def test_prepare_image_part_handles_ipv6_loopback(mock_gemini_client):
     """Should block IPv6 loopback (::1)."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -166,9 +182,9 @@ async def test_prepare_image_part_handles_ipv6_loopback():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_handles_ipv6_private():
+async def test_prepare_image_part_handles_ipv6_private(mock_gemini_client):
     """Should block IPv6 private addresses (fc00::/7)."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     with patch("socket.getaddrinfo") as mock_getaddrinfo:
         mock_getaddrinfo.return_value = [
@@ -180,9 +196,9 @@ async def test_prepare_image_part_handles_ipv6_private():
 
 
 @pytest.mark.asyncio
-async def test_prepare_image_part_allows_valid_base64():
+async def test_prepare_image_part_allows_valid_base64(mock_gemini_client):
     """Should allow valid base64 data URIs without SSRF checks."""
-    client = GeminiClient()
+    client = mock_gemini_client
 
     # Base64 data URIs don't trigger URL validation
     # This is a simple test to ensure base64 path still works
