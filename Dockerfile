@@ -61,12 +61,12 @@ ENV PYTHONPATH="/app/src:$PYTHONPATH"
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# Expose port 8000 for Cloud Run
+# Expose port (Cloud Run uses PORT env var, defaults to 8000 locally)
 EXPOSE 8000
 
 # Health check (optional but recommended for Cloud Run)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/healthz', timeout=2.0)" || exit 1
+    CMD python -c "import httpx, os; httpx.get(f'http://localhost:{os.getenv(\"PORT\", \"8000\")}/healthz', timeout=2.0)" || exit 1
 
-# Run uvicorn server
-CMD ["uvicorn", "ml_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn server (respects PORT env var from Cloud Run, defaults to 8000)
+CMD sh -c "uvicorn ml_service.main:app --host 0.0.0.0 --port ${PORT:-8000}"
