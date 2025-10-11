@@ -21,6 +21,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Accept HuggingFace token as build argument for model download
 ARG HUGGING_FACE_HUB_TOKEN
 ENV HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+# SentenceTransformer uses HF_TOKEN for authentication
+ENV HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
 
 # Set HuggingFace cache location
 ENV HF_HOME=/app/.cache/huggingface
