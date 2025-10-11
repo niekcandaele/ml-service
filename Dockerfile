@@ -49,9 +49,9 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application source code
 COPY src/ /app/src/
 
-# Create non-root user for security
-RUN useradd -m -u 1000 mlservice && chown -R mlservice:mlservice /app
-USER mlservice
+# Use existing user with UID 1000 for security
+RUN chown -R 1000:1000 /app
+USER 1000
 
 # Set Python path to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
