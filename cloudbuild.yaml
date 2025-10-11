@@ -24,8 +24,7 @@ steps:
       - 'push'
       - 'gcr.io/$PROJECT_ID/ml-service:latest'
 
-  # Deploy to Cloud Run
-  # Note: Adjust --region and service name as needed
+  # Deploy to Cloud Run with GPU
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -34,19 +33,15 @@ steps:
       - '--image'
       - 'gcr.io/$PROJECT_ID/ml-service:$SHORT_SHA'
       - '--region'
-      - 'us-central1'  # Change to your preferred region
+      - 'europe-west1'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated'  # Remove for authenticated-only access
-      # Uncomment for GPU support (requires quota):
-      # - '--gpu'
-      # - '1'
-      # - '--gpu-type'
-      # - 'nvidia-l4'
-      # - '--cpu'
-      # - '4'
-      # - '--memory'
-      # - '16Gi'
+      - '--allow-unauthenticated'
+      - '--gpu=1'
+      - '--gpu-type=nvidia-l4'
+      - '--cpu=4'
+      - '--memory=16Gi'
+      - '--max-instances=10'
 
 # Increase disk size and use faster machine for large ML image builds
 options:

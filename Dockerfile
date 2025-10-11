@@ -1,8 +1,20 @@
 # Multi-stage build for ML Service on Cloud Run GPU
-# Based on Cloud Run best practices and UV package manager
+# Uses NVIDIA CUDA runtime for GPU acceleration
 
 # Stage 1: Builder - Install dependencies
-FROM python:3.12-slim AS builder
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS builder
+
+# Install Python 3.12 and system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-dev \
+    python3.12-venv \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Make python3.12 the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 
 # Install UV package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -13,11 +25,22 @@ WORKDIR /app
 # Copy dependency files and README (required by hatchling)
 COPY pyproject.toml uv.lock README.md ./
 
-# Install dependencies into /app/.venv
-RUN uv sync --frozen --no-dev
+# Install dependencies with CUDA support
+# PyTorch CUDA 12.1 index for GPU support
+RUN uv sync --frozen --no-dev --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Stage 2: Runtime - Minimal production image
-FROM python:3.12-slim
+# Stage 2: Runtime - CUDA runtime image
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+
+# Install Python 3.12 runtime
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Make python3.12 the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 
 # Set working directory
 WORKDIR /app
@@ -35,6 +58,10 @@ USER mlservice
 # Set Python path to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/src:$PYTHONPATH"
+
+# CUDA environment variables for runtime detection
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 # Expose port 8000 for Cloud Run
 EXPOSE 8000
