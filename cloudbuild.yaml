@@ -42,7 +42,7 @@ steps:
       - '--no-gpu-zonal-redundancy'
       - '--cpu=4'
       - '--memory=16Gi'
-      - '--max-instances=10'
+      - '--max-instances=1'
 
 # Increase disk size and use faster machine for large ML image builds
 options:
