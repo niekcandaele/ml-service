@@ -21,8 +21,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files and README (required by hatchling)
-COPY pyproject.toml uv.lock README.md ./
+# Copy dependency files (README not needed for uv sync)
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies with CUDA support
 # PyTorch CUDA 12.1 index for GPU support
