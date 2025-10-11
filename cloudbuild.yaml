@@ -8,21 +8,21 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/ml-service:$SHORT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:$SHORT_SHA'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/ml-service:latest'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:latest'
       - '.'
 
-  # Push image to Google Container Registry
+  # Push image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/ml-service:$SHORT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:$SHORT_SHA'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/ml-service:latest'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:latest'
 
   # Deploy to Cloud Run with GPU
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -31,7 +31,7 @@ steps:
       - 'deploy'
       - 'ml-service'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/ml-service:$SHORT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:$SHORT_SHA'
       - '--region'
       - 'europe-west1'
       - '--platform'
