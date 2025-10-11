@@ -18,6 +18,13 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 # Install UV package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
+# Accept HuggingFace token as build argument for model download
+ARG HUGGING_FACE_HUB_TOKEN
+ENV HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+
+# Set HuggingFace cache location
+ENV HF_HOME=/app/.cache/huggingface
+
 # Set working directory
 WORKDIR /app
 
@@ -27,6 +34,10 @@ COPY pyproject.toml uv.lock README.md ./
 # Install dependencies with CUDA support
 # PyTorch CUDA 12.1 index for GPU support
 RUN uv sync --frozen --no-dev --extra-index-url https://download.pytorch.org/whl/cu121
+
+# Download EmbeddingGemma model during build (requires HUGGING_FACE_HUB_TOKEN)
+# This bakes the model into the image (~500MB) to avoid runtime downloads
+RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('google/embeddinggemma-300m')"
 
 # Stage 2: Runtime - CUDA runtime image
 FROM nvidia/cuda:12.8.0-runtime-ubuntu24.04
@@ -46,6 +57,9 @@ WORKDIR /app
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
+# Copy HuggingFace model cache from builder (contains pre-downloaded EmbeddingGemma)
+COPY --from=builder /app/.cache/huggingface /app/.cache/huggingface
+
 # Copy application source code
 COPY src/ /app/src/
 
@@ -56,6 +70,9 @@ USER 1000
 # Set Python path to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/src:$PYTHONPATH"
+
+# Set HuggingFace cache location (model pre-downloaded during build)
+ENV HF_HOME=/app/.cache/huggingface
 
 # CUDA environment variables for runtime detection
 ENV NVIDIA_VISIBLE_DEVICES=all
