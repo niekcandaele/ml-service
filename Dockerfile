@@ -37,8 +37,10 @@ COPY pyproject.toml uv.lock README.md ./
 # PyTorch CUDA 12.1 index for GPU support
 RUN uv sync --frozen --no-dev --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Download EmbeddingGemma model during build (requires HUGGING_FACE_HUB_TOKEN)
+# Download EmbeddingGemma model during build (requires HF_TOKEN)
 # This bakes the model into the image (~500MB) to avoid runtime downloads
+# Debug: Check if token is set (will show as "Token length: X" without exposing value)
+RUN test -n "$HF_TOKEN" && echo "Token is set (length: $(echo -n "$HF_TOKEN" | wc -c))" || echo "ERROR: HF_TOKEN is empty!"
 RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('google/embeddinggemma-300m')"
 
 # Stage 2: Runtime - CUDA runtime image
