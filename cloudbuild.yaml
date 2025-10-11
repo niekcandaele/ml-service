@@ -39,6 +39,7 @@ steps:
       - '--allow-unauthenticated'
       - '--gpu=1'
       - '--gpu-type=nvidia-l4'
+      - '--no-gpu-zonal-redundancy'
       - '--cpu=4'
       - '--memory=16Gi'
       - '--max-instances=10'
