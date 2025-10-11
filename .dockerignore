@@ -48,10 +48,10 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-# Documentation
-README.md
+# Documentation (keep root README.md for hatchling)
+# README.md  # Needed by hatchling during uv sync
 docs/
-*.md
+docs/*.md
 
 # Logs
 *.log
