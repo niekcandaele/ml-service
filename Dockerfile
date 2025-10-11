@@ -2,19 +2,18 @@
 # Uses NVIDIA CUDA runtime for GPU acceleration
 
 # Stage 1: Builder - Install dependencies
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS builder
+FROM nvidia/cuda:12.8.0-runtime-ubuntu24.04 AS builder
 
-# Install Python 3.12 and system dependencies
+# Install Python 3 and system dependencies (Ubuntu 24.04 ships with Python 3.12)
 RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-dev \
-    python3.12-venv \
+    python3 \
+    python3-dev \
+    python3-venv \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Make python3.12 the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+# Make python3 the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 # Install UV package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -30,17 +29,16 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Stage 2: Runtime - CUDA runtime image
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.8.0-runtime-ubuntu24.04
 
-# Install Python 3.12 runtime
+# Install Python 3 runtime (Ubuntu 24.04 ships with Python 3.12)
 RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-venv \
+    python3 \
+    python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Make python3.12 the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+# Make python3 the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 # Set working directory
 WORKDIR /app
