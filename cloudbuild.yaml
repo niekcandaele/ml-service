@@ -4,16 +4,17 @@
 
 steps:
   # Build Docker image with HuggingFace token for model download
+  # Using bash entrypoint to properly interpolate secrets (Cloud Build requirement)
   - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     args:
-      - 'build'
-      - '--build-arg'
-      - 'HUGGING_FACE_HUB_TOKEN=$$HUGGING_FACE_HUB_TOKEN'
-      - '-t'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:$SHORT_SHA'
-      - '-t'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:latest'
-      - '.'
+      - '-c'
+      - |
+        docker build \
+          --build-arg HUGGING_FACE_HUB_TOKEN=$$HUGGING_FACE_HUB_TOKEN \
+          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:$SHORT_SHA \
+          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ml-service/ml-service:latest \
+          .
     secretEnv: ['HUGGING_FACE_HUB_TOKEN']
 
   # Push image to Artifact Registry
