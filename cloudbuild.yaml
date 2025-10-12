@@ -48,6 +48,7 @@ steps:
       - '--memory=16Gi'
       - '--max-instances=1'
       - '--set-secrets=GOOGLE_API_KEY=google-api-key:latest'
+      - '--set-secrets=API_KEY=ml-service-api-key:latest'
 
 # Increase disk size and use faster machine for large ML image builds
 options:

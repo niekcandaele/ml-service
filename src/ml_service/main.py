@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from ml_service.api.middleware.auth import AuthMiddleware
 from ml_service.api.routes.classification import router as classification_router
 from ml_service.api.routes.completion import router as completion_router
 from ml_service.api.routes.embedding import router as embedding_router
@@ -121,6 +122,9 @@ app = FastAPI(
     },
     license_info={"name": "Proprietary"},
 )
+
+# Register middleware
+app.add_middleware(AuthMiddleware)
 
 # Register exception handlers
 app.add_exception_handler(APIError, api_error_handler)

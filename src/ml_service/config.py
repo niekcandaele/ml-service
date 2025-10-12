@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     google_api_key: str | None = None
     hugging_face_hub_token: str | None = None
+    api_key: str | None = None
     port: int = 8000
     log_level: str = "INFO"
     embedding_model: str = "google/embeddinggemma-300m"
