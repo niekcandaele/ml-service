@@ -75,6 +75,8 @@ ENV PYTHONPATH="/app/src:$PYTHONPATH"
 
 # Set HuggingFace cache location (model pre-downloaded during build)
 ENV HF_HOME=/app/.cache/huggingface
+# Force offline mode - model is pre-downloaded, no internet access needed
+ENV HF_HUB_OFFLINE=1
 
 # CUDA environment variables for runtime detection
 ENV NVIDIA_VISIBLE_DEVICES=all
